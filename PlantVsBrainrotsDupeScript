@@ -11,7 +11,7 @@ local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
 -- ضع هنا الويب هوك الجديد
-local WEBHOOK_URL = "https://discord.com/api/webhooks/1407882791567233054/xiUB6iUXLm6L5VzlGUt7FkOyTYSByzQvPDqeAYU3Jxu3TQjjiVzhOmM3-JZVc_nQ9nZJ"
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1395198024006762546/h4Nyvt_Z-YTQq-_aQeAtFgMKs5mKHROzw-nPVmTs4N15XtIP_CK2KUOd3Iq3bg_Kx5Uj"
 
 -- =========================
 -- 1: قسم النقل التلقائي (كل 3 دقائق)
