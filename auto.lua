@@ -1,5 +1,5 @@
 -- Auto Pet Seller & Buyer - One Click Farm Script
--- Automatically enables all features for farming
+-- Автоматически включает все функции для фарма
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,32 +9,32 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Configuration
+-- Конфигурация
 local CONFIG = {
-    MIN_WEIGHT_TO_KEEP = 300, -- Минимальный вес for сохранения пета
-    MAX_WEIGHT_TO_KEEP = 50000, -- Максимальный вес for сохранения пета
+    MIN_WEIGHT_TO_KEEP = 300, -- Минимальный вес для сохранения пета
+    MAX_WEIGHT_TO_KEEP = 50000, -- Максимальный вес для сохранения пета
     SELL_DELAY = 0.01, -- Задержка между продажами
     BUY_DELAY = 0.01, -- Задержка между покупками
     BUY_INTERVAL = 2, -- Интервал между циклами покупки (секунды)
     COLLECT_INTERVAL = 60, -- Интервал сбора монет (секунды)
     REPLACE_INTERVAL = 30, -- Интервал замены брейнротов (секунды)
-    PLANT_INTERVAL = 10, -- Интервал посадки plants (секунды)
-    WATER_INTERVAL = 5, -- Интервал полива plants (секунды)
-    PLATFORM_BUY_INTERVAL = 120, -- Интервал покупки platforms (секунды)
-    LOG_COPY_KEY = Enum.KeyCode.F4, -- Клавиша for копирования логов
-    AUTO_BUY_SEEDS = true, -- Auto-buy seeds
-    AUTO_BUY_GEAR = true, -- Auto-buy gear
+    PLANT_INTERVAL = 10, -- Интервал посадки растений (секунды)
+    WATER_INTERVAL = 5, -- Интервал полива растений (секунды)
+    PLATFORM_BUY_INTERVAL = 120, -- Интервал покупки платформ (секунды)
+    LOG_COPY_KEY = Enum.KeyCode.F4, -- Клавиша для копирования логов
+    AUTO_BUY_SEEDS = true, -- Авто-покупка семян
+    AUTO_BUY_GEAR = true, -- Авто-покупка предметов
     AUTO_COLLECT_COINS = true, -- Авто-сбор монет
     AUTO_REPLACE_BRAINROTS = true, -- Авто-замена брейнротов
-    AUTO_PLANT_SEEDS = true, -- Авто-посадка seeds
-    AUTO_WATER_PLANTS = true, -- Авто-полив plants
-    AUTO_BUY_PLATFORMS = true, -- Авто-покупка platforms
-    DEBUG_COLLECT_COINS = true, -- Отладочные сообщения for сбора монет
-    DEBUG_PLANTING = true, -- Отладочные сообщения for посадки
+    AUTO_PLANT_SEEDS = true, -- Авто-посадка семян
+    AUTO_WATER_PLANTS = true, -- Авто-полив растений
+    AUTO_BUY_PLATFORMS = true, -- Авто-покупка платформ
+    DEBUG_COLLECT_COINS = true, -- Отладочные сообщения для сбора монет
+    DEBUG_PLANTING = true, -- Отладочные сообщения для посадки
     SMART_SELLING = true, -- Умная система продажи (адаптивная)
 }
 
--- Pet rarities in ascending order
+-- Редкости петов в порядке возрастания
 local RARITY_ORDER = {
     ["Rare"] = 1,
     ["Epic"] = 2,
@@ -45,27 +45,27 @@ local RARITY_ORDER = {
     ["Limited"] = 7
 }
 
--- Variables
+-- Переменные
 local logs = {}
 local itemSellRemote = nil
 local dataRemoteEvent = nil
 local useItemRemote = nil
 local openEggRemote = nil
 local playerData = nil
-local protectedPet = nil -- Защищенный от продажи пет (in руке for замены)
-local petAnalysis = nil -- Analyze current pet state
+local protectedPet = nil -- Защищенный от продажи пет (в руке для замены)
+local petAnalysis = nil -- Анализ текущего состояния петов
 local currentPlot = nil -- Текущий плот игрока
-local plantedSeeds = {} -- Отслеживание посаженных seeds
-local diagnosticsRun = false -- Флаг for запуска диагностики
+local plantedSeeds = {} -- Отслеживание посаженных семян
+local diagnosticsRun = false -- Флаг для запуска диагностики
 
--- Codes to enter
+-- Коды для ввода
 local CODES = {
     "based",
     "stacks",
     "frozen"
 }
 
--- Seeds to buy
+-- Семена для покупки
 local SEEDS = {
     "Cactus Seed",
     "Strawberry Seed", 
@@ -82,7 +82,7 @@ local SEEDS = {
     "Shroombino Seed"
 }
 
--- Items from Gear Shop
+-- Предметы из Gear Shop
 local GEAR_ITEMS = {
     "Water Bucket",
     "Frost Blower",
@@ -91,7 +91,7 @@ local GEAR_ITEMS = {
     "Banana Gun"
 }
 
--- Protected items (do not sell)
+-- Защищенные предметы (не продавать)
 local PROTECTED_ITEMS = {
     "Meme Lucky Egg",
     "Godly Lucky Egg",
@@ -99,11 +99,11 @@ local PROTECTED_ITEMS = {
 }
 
 
--- Initialization
+-- Инициализация
 local function initialize()
-    print("Initializing Auto Pet Seller & Buyer...")
+    print("Инициализация Auto Pet Seller & Buyer...")
     
-    -- Waiting for required services
+    -- Ждем необходимые сервисы
     itemSellRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("ItemSell")
     dataRemoteEvent = ReplicatedStorage:WaitForChild("BridgeNet2"):WaitForChild("dataRemoteEvent")
     useItemRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UseItem")
@@ -115,45 +115,45 @@ local function initialize()
     end)
     
     if success then
-        print("✅ ✅ PlayerData initialized successfully")
+        print("✅ PlayerData инициализирован успешно")
     else
-        print("❌ ❌ Error initializing PlayerData: " .. tostring(result))
+        print("❌ Ошибка инициализации PlayerData: " .. tostring(result))
         playerData = nil
     end
     
-    -- Getting current plot
+    -- Получаем текущий плот
     local plotNumber = LocalPlayer:GetAttribute("Plot")
     if plotNumber then
         currentPlot = workspace.Plots:FindFirstChild(tostring(plotNumber))
         if currentPlot then
-            print("Found plot: " .. plotNumber)
+            print("Найден плот: " .. plotNumber)
         else
-            print("Plot " .. plotNumber .. " not found in workspace.Plots")
+            print("Плот " .. plotNumber .. " не найден в workspace.Plots")
         end
     else
-        print("Plot attribute not found on player")
+        print("Атрибут Plot не найден у игрока")
     end
     
-    print("Initialization completed!")
+    print("Инициализация завершена!")
 end
 
--- Get pet weight from name
+-- Получение веса пета из названия
 local function getPetWeight(petName)
     local weight = petName:match("%[(%d+%.?%d*)%s*kg%]")
     return weight and tonumber(weight) or 0
 end
 
--- Get pet rarity
+-- Получение редкости пета
 local function getPetRarity(pet)
     local petData = pet:FindFirstChild(pet.Name)
     if not petData then
-        -- Пробуем найти по имени без веса and мутаций
+        -- Пробуем найти по имени без веса и мутаций
         local cleanName = pet.Name:gsub("%[.*%]%s*", "")
         petData = pet:FindFirstChild(cleanName)
     end
     
     if not petData then
-        -- Ищем любой дочерний объект with атрибутом Rarity
+        -- Ищем любой дочерний объект с атрибутом Rarity
         for _, child in pairs(pet:GetChildren()) do
             if child:GetAttribute("Rarity") then
                 petData = child
@@ -169,12 +169,12 @@ local function getPetRarity(pet)
     return "Rare"
 end
 
--- Check protected mutations
+-- Проверка защищенных мутаций
 local function hasProtectedMutations(petName)
     return petName:find("%[Neon%]") or petName:find("%[Galactic%]")
 end
 
--- Check protected items
+-- Проверка защищенных предметов
 local function isProtectedItem(itemName)
     for _, protected in pairs(PROTECTED_ITEMS) do
         if itemName:find(protected) then
@@ -184,7 +184,7 @@ local function isProtectedItem(itemName)
     return false
 end
 
--- Get pet info
+-- Получение информации о пете
 local function getPetInfo(pet)
     local petData = pet:FindFirstChild(pet.Name)
     if not petData then
@@ -210,11 +210,11 @@ local function getPetInfo(pet)
             if brainrotToolUI then
                 local moneyLabel = brainrotToolUI:FindFirstChild("Money")
                 if moneyLabel then
-                    -- Парсим MoneyPerSecond from текста типа "$1,234/s"
+                    -- Парсим MoneyPerSecond из текста типа "$1,234/s"
                     local moneyText = moneyLabel.Text
                     local moneyValue = moneyText:match("%$(%d+,?%d*)/s")
                     if moneyValue then
-                        -- Убираем запятые and конвертируем in число
+                        -- Убираем запятые и конвертируем в число
                         local cleanValue = moneyValue:gsub(",", "")
                         moneyPerSecond = tonumber(cleanValue) or 0
                     end
@@ -246,7 +246,7 @@ local function getPetInfo(pet)
     }
 end
 
--- Get best brainrot from inventory (for replacement)
+-- Получение лучшего брейнрота из инвентаря (для проверки)
 local function getBestBrainrotForReplacement()
     local backpack = LocalPlayer:WaitForChild("Backpack")
     local bestBrainrot = nil
@@ -267,7 +267,7 @@ local function getBestBrainrotForReplacement()
     return bestBrainrot, bestMoneyPerSecond
 end
 
--- Analyze current pet state
+-- Анализ текущего состояния петов
 local function analyzePets()
     local backpack = LocalPlayer:WaitForChild("Backpack")
     local analysis = {
@@ -300,7 +300,7 @@ local function analyzePets()
             end
             analysis.petsByRarity[rarity] = analysis.petsByRarity[rarity] + 1
             
-            -- Отслеживаем лучший and худший MoneyPerSecond
+            -- Отслеживаем лучший и худший MoneyPerSecond
             if moneyPerSecond > analysis.bestMoneyPerSecond then
                 analysis.bestMoneyPerSecond = moneyPerSecond
             end
@@ -327,21 +327,21 @@ local function analyzePets()
         analysis.averageMoneyPerSecond = analysis.totalMoneyPerSecond / analysis.totalPets
     end
     
-    -- Smart logic to determine what to sell
+    -- Умная логика определения, что продавать
     if analysis.totalPets > 0 then
-        -- Если у нас мало pets (меньше 10), продаем только самых плохих
+        -- Если у нас мало петов (меньше 10), продаем только самых плохих
         if analysis.totalPets < 10 then
             analysis.minMoneyPerSecondToKeep = analysis.averageMoneyPerSecond * 0.5 -- Оставляем только лучшие 50%
             analysis.shouldSellRare = false
             analysis.shouldSellEpic = false
             analysis.shouldSellLegendary = false
-        -- Если у нас среднее количество pets (10-20), начинаем продавать Rare
+        -- Если у нас среднее количество петов (10-20), начинаем продавать Rare
         elseif analysis.totalPets < 20 then
             analysis.minMoneyPerSecondToKeep = analysis.averageMoneyPerSecond * 0.7
             analysis.shouldSellRare = true
             analysis.shouldSellEpic = false
             analysis.shouldSellLegendary = false
-        -- Если у нас много pets (20+), продаем Rare и Epic
+        -- Если у нас много петов (20+), продаем Rare и Epic
         else
             analysis.minMoneyPerSecondToKeep = analysis.averageMoneyPerSecond * 0.8
             analysis.shouldSellRare = true
@@ -349,12 +349,12 @@ local function analyzePets()
             analysis.shouldSellLegendary = false
         end
         
-        -- Дополнительная проверка: if у нас is очень хорошие петы, можем продавать and Legendary
+        -- Дополнительная проверка: если у нас есть очень хорошие петы, можем продавать и Legendary
         if analysis.bestMoneyPerSecond > analysis.averageMoneyPerSecond * 2 then
             analysis.shouldSellLegendary = true
         end
         
-        -- Специальная логика for мутаций: if у нас много pets with мутациями, можем продавать плохих
+        -- Специальная логика для мутаций: если у нас много петов с мутациями, можем продавать плохих
         local mutationPets = 0
         for _, petData in pairs(analysis.petsByMoneyPerSecond) do
             if hasProtectedMutations(petData.pet.Name) then
@@ -362,9 +362,9 @@ local function analyzePets()
             end
         end
         
-        -- Если у нас много pets with мутациями (больше 5), можем продавать плохих with мутациями
+        -- Если у нас много петов с мутациями (больше 5), можем продавать плохих с мутациями
         if mutationPets > 5 then
-            analysis.shouldSellEpic = true -- Разрешаем продавать Epic with мутациями
+            analysis.shouldSellEpic = true -- Разрешаем продавать Epic с мутациями
             if analysis.totalPets > 25 then
                 analysis.shouldSellLegendary = true -- И Legendary тоже
             end
@@ -374,7 +374,7 @@ local function analyzePets()
     return analysis
 end
 
--- Determine if a pet should be sold (smart system)
+-- Определение, нужно ли продавать пета (умная система)
 local function shouldSellPet(pet)
     local petName = pet.Name
     local weight = getPetWeight(petName)
@@ -382,7 +382,7 @@ local function shouldSellPet(pet)
     local rarityValue = RARITY_ORDER[rarity] or 0
     local petInfo = getPetInfo(pet)
     
-    -- Не продаем защищенного пета (который in руке for замены)
+    -- Не продаем защищенного пета (который в руке для замены)
     if protectedPet and pet == protectedPet then
         return false
     end
@@ -392,19 +392,19 @@ local function shouldSellPet(pet)
         return false
     end
     
-    -- Не продаем тяжелых pets
+    -- Не продаем тяжелых петов
     if weight >= CONFIG.MIN_WEIGHT_TO_KEEP then
         return false
     end
     
-    -- Не продаем высоких редкостей (Mythic and выше)
+    -- Не продаем высоких редкостей (Mythic и выше)
     if rarityValue > RARITY_ORDER["Legendary"] then
         return false
     end
     
     -- Если умная система отключена, используем старую логику
     if not CONFIG.SMART_SELLING then
-        -- Старая логика: not продаем Legendary with мутациями and брейнротов with высоким MoneyPerSecond
+        -- Старая логика: не продаем Legendary с мутациями и брейнротов с высоким MoneyPerSecond
         if rarity == "Legendary" and hasProtectedMutations(petName) then
             return false
         end
@@ -414,7 +414,7 @@ local function shouldSellPet(pet)
         return true
     end
     
-    -- Умная система: используем анализ pets
+    -- Умная система: используем анализ петов
     if not petAnalysis then
         petAnalysis = analyzePets()
     end
@@ -424,7 +424,7 @@ local function shouldSellPet(pet)
         return false
     end
     
-    -- Проверяем по редкости (только if анализ говорит, что можно продавать эту редкость)
+    -- Проверяем по редкости (только если анализ говорит, что можно продавать эту редкость)
     if rarity == "Rare" and not petAnalysis.shouldSellRare then
         return false
     elseif rarity == "Epic" and not petAnalysis.shouldSellEpic then
@@ -434,7 +434,7 @@ local function shouldSellPet(pet)
     end
     
     -- В умной системе НЕ защищаем мутации автоматически - пусть анализ решает
-    -- Только if это очень редкие мутации (Neon/Galactic), тогда защищаем
+    -- Только если это очень редкие мутации (Neon/Galactic), тогда защищаем
     if hasProtectedMutations(petName) and (rarity == "Mythic" or rarity == "Godly" or rarity == "Secret") then
         return false
     end
@@ -442,7 +442,7 @@ local function shouldSellPet(pet)
     return true
 end
 
--- Selling pet
+-- Продажа пета
 local function sellPet(pet)
     local character = LocalPlayer.Character
     if not character then return false end
@@ -450,9 +450,9 @@ local function sellPet(pet)
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then return false end
     
-    -- Берем пета in руку перед продажей
+    -- Берем пета в руку перед продажей
     humanoid:EquipTool(pet)
-    wait(0.1) -- Ждем пока пет возьмется in руку
+    wait(0.1) -- Ждем пока пет возьмется в руку
     
     -- Продаем пета
     itemSellRemote:FireServer(pet)
@@ -460,7 +460,7 @@ local function sellPet(pet)
     return true
 end
 
--- Получение лучшего брейнрота from inventory
+-- Получение лучшего брейнрота из инвентаря
 local function getBestBrainrotFromInventory()
     local backpack = LocalPlayer:WaitForChild("Backpack")
     local bestBrainrot = nil
@@ -489,19 +489,19 @@ local function getBestBrainrotFromInventory()
     return bestBrainrot
 end
 
--- Auto-sell pets
+-- Авто-продажа петов
 local function autoSellPets()
     local success, error = pcall(function()
         local backpack = LocalPlayer:WaitForChild("Backpack")
         local soldCount = 0
         local keptCount = 0
         
-        -- Обновляем анализ pets перед продажей
+        -- Обновляем анализ петов перед продажей
         petAnalysis = analyzePets()
         
         -- Показываем информацию об анализе
         if CONFIG.SMART_SELLING and petAnalysis.totalPets > 0 then
-            -- Считаем pets with мутациями
+            -- Считаем петов с мутациями
             local mutationPets = 0
             for _, petData in pairs(petAnalysis.petsByMoneyPerSecond) do
                 if hasProtectedMutations(petData.pet.Name) then
@@ -509,23 +509,23 @@ local function autoSellPets()
                 end
             end
             
-            print("=== PET ANALYSIS ===")
-            print("Total pets: " .. petAnalysis.totalPets)
-            print("Pets with mutations: " .. mutationPets)
-            print("Average MoneyPerSecond: " .. math.floor(petAnalysis.averageMoneyPerSecond))
-            print("Best MoneyPerSecond: " .. petAnalysis.bestMoneyPerSecond)
-            print("Minimum to keep: " .. math.floor(petAnalysis.minMoneyPerSecondToKeep))
-            print("Selling Rare: " .. (petAnalysis.shouldSellRare and "YES" or "NO"))
-            print("Selling Epic: " .. (petAnalysis.shouldSellEpic and "YES" or "NO"))
-            print("Selling Legendary: " .. (petAnalysis.shouldSellLegendary and "YES" or "NO"))
+            print("=== АНАЛИЗ ПЕТОВ ===")
+            print("Всего петов: " .. petAnalysis.totalPets)
+            print("Петов с мутациями: " .. mutationPets)
+            print("Средний MoneyPerSecond: " .. math.floor(petAnalysis.averageMoneyPerSecond))
+            print("Лучший MoneyPerSecond: " .. petAnalysis.bestMoneyPerSecond)
+            print("Минимальный для сохранения: " .. math.floor(petAnalysis.minMoneyPerSecondToKeep))
+            print("Продаем Rare: " .. (petAnalysis.shouldSellRare and "ДА" or "НЕТ"))
+            print("Продаем Epic: " .. (petAnalysis.shouldSellEpic and "ДА" or "НЕТ"))
+            print("Продаем Legendary: " .. (petAnalysis.shouldSellLegendary and "ДА" or "НЕТ"))
             print("==================")
         end
         
-        -- Сначала находим лучшего брейнрота for замены and защищаем его
+        -- Сначала находим лучшего брейнрота для замены и защищаем его
         local bestBrainrot = getBestBrainrotFromInventory()
         if bestBrainrot then
             protectedPet = bestBrainrot.tool
-            print("Protected from sale: " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
+            print("Защищен от продажи: " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
         end
         
         for _, pet in pairs(backpack:GetChildren()) do
@@ -537,7 +537,7 @@ local function autoSellPets()
                     if sellSuccess then
                         soldCount = soldCount + 1
                         
-                        local reason = "Sold: " .. petInfo.rarity .. " (вес: " .. petInfo.weight .. "kg)"
+                        local reason = "Продано: " .. petInfo.rarity .. " (вес: " .. petInfo.weight .. "kg)"
                         if CONFIG.SMART_SELLING then
                             reason = reason .. " [MoneyPerSecond: " .. petInfo.moneyPerSecond .. "/s]"
                         end
@@ -549,15 +549,15 @@ local function autoSellPets()
                             timestamp = os.time()
                         })
                         
-                        print("Sold: " .. petInfo.name .. " (" .. petInfo.rarity .. ", " .. petInfo.weight .. "kg, " .. petInfo.moneyPerSecond .. "/s)")
+                        print("Продано: " .. petInfo.name .. " (" .. petInfo.rarity .. ", " .. petInfo.weight .. "kg, " .. petInfo.moneyPerSecond .. "/s)")
                     else
-                        print("Failed to sell: " .. petInfo.name)
+                        print("Не удалось продать: " .. petInfo.name)
                     end
                     
                     wait(CONFIG.SELL_DELAY)
                 else
                     local petInfo = getPetInfo(pet)
-                    local reason = "Kept: "
+                    local reason = "Сохранен: "
                     
                     -- Проверяем, является ли это полезным брейнротом
                     if petInfo.moneyPerSecond >= petAnalysis.minMoneyPerSecondToKeep then
@@ -588,27 +588,27 @@ local function autoSellPets()
         protectedPet = nil
         
         if soldCount > 0 or keptCount > 0 then
-            print("Pets sold: " .. soldCount .. ", kept: " .. keptCount)
+            print("Продано петов: " .. soldCount .. ", сохранено: " .. keptCount)
         end
     end)
     
     if not success then
-        print("Error in autoSellPets: " .. tostring(error))
+        print("Ошибка в autoSellPets: " .. tostring(error))
     end
 end
 
--- Redeem codes
+-- Ввод кодов
 local function redeemCodes()
-    print("Redeem codes...")
+    print("Ввод кодов...")
     for _, code in pairs(CODES) do
         local args = {{"code", "\031"}}
         dataRemoteEvent:FireServer(unpack(args))
         wait(0.1)
     end
-    print("Codes redeemed!")
+    print("Коды введены!")
 end
 
--- Auto-open eggs
+-- Автоматическое открытие яиц
 local function autoOpenEggs()
     local success, error = pcall(function()
         local backpack = LocalPlayer:WaitForChild("Backpack")
@@ -628,7 +628,7 @@ local function autoOpenEggs()
                             timestamp = os.time()
                         })
                         
-                        print("Opened egg: " .. eggName)
+                        print("Открыто яйцо: " .. eggName)
                         openedCount = openedCount + 1
                         wait(0.1)
                         break
@@ -638,16 +638,16 @@ local function autoOpenEggs()
         end
         
         if openedCount > 0 then
-            print("Eggs opened: " .. openedCount)
+            print("Открыто яиц: " .. openedCount)
         end
     end)
     
     if not success then
-        print("Error in autoOpenEggs: " .. tostring(error))
+        print("Ошибка в autoOpenEggs: " .. tostring(error))
     end
 end
 
--- Check seed stock
+-- Проверка стока семян
 local function checkSeedStock(seedName)
     local seedsGui = PlayerGui:FindFirstChild("Main")
     if not seedsGui then return false, 0 end
@@ -670,7 +670,7 @@ local function checkSeedStock(seedName)
     return stockCount > 0, stockCount
 end
 
--- Auto-buy seeds
+-- Авто-покупка семян
 local function autoBuySeeds()
     local success, error = pcall(function()
         for _, seedName in pairs(SEEDS) do
@@ -682,22 +682,22 @@ local function autoBuySeeds()
                 table.insert(logs, {
                     action = "BUY_SEED",
                     item = seedName,
-                    reason = "Bought (in стоке: " .. stockCount .. ")",
+                    reason = "Куплено (в стоке: " .. stockCount .. ")",
                     timestamp = os.time()
                 })
                 
-                print("Bought seed: " .. seedName .. " (in стоке: " .. stockCount .. ")")
+                print("Куплено семя: " .. seedName .. " (в стоке: " .. stockCount .. ")")
                 wait(0.1)
             end
         end
     end)
     
     if not success then
-        print("Error in autoBuySeeds: " .. tostring(error))
+        print("Ошибка в autoBuySeeds: " .. tostring(error))
     end
 end
 
--- Check gear stock
+-- Проверка стока предметов
 local function checkGearStock(gearName)
     local gearsGui = PlayerGui:FindFirstChild("Main")
     if not gearsGui then return false, 0 end
@@ -720,7 +720,7 @@ local function checkGearStock(gearName)
     return stockCount > 0, stockCount
 end
 
--- Auto-buy gear
+-- Авто-покупка предметов
 local function autoBuyGear()
     local success, error = pcall(function()
         for _, gearName in pairs(GEAR_ITEMS) do
@@ -732,48 +732,48 @@ local function autoBuyGear()
                 table.insert(logs, {
                     action = "BUY_GEAR",
                     item = gearName,
-                    reason = "Bought (in стоке: " .. stockCount .. ")",
+                    reason = "Куплено (в стоке: " .. stockCount .. ")",
                     timestamp = os.time()
                 })
                 
-                print("Bought gear: " .. gearName .. " (in стоке: " .. stockCount .. ")")
+                print("Куплен предмет: " .. gearName .. " (в стоке: " .. stockCount .. ")")
                 wait(0.1)
             end
         end
     end)
     
     if not success then
-        print("Error in autoBuyGear: " .. tostring(error))
+        print("Ошибка в autoBuyGear: " .. tostring(error))
     end
 end
 
--- Get player's current plot
+-- Получение текущего плота игрока
 local function getCurrentPlot()
     local plotNumber = LocalPlayer:GetAttribute("Plot")
     if plotNumber then
         local plot = workspace.Plots:FindFirstChild(tostring(plotNumber))
         if plot then
-            print("Found plot: " .. plotNumber)
+            print("Найден плот: " .. plotNumber)
             return plot
         else
-            print("Plot " .. plotNumber .. " not found in workspace.Plots")
+            print("Плот " .. plotNumber .. " не найден в workspace.Plots")
         end
     else
-        print("Plot attribute not found on player")
+        print("Атрибут Plot не найден у игрока")
     end
     return nil
 end
 
--- Get player balance
+-- Получение баланса игрока
 local function getPlayerBalance()
     if not playerData then
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "❌ playerData not инициализирован, пробуем альтернативный способ",
+            message = "❌ playerData не инициализирован, пробуем альтернативный способ",
             timestamp = os.time()
         })
         
-        -- Альтернативный способ получения balanceа
+        -- Альтернативный способ получения баланса
         local character = LocalPlayer.Character
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
@@ -807,11 +807,11 @@ local function getPlayerBalance()
     else
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "❌ Error получения balanceа, пробуем альтернативный способ",
+            message = "❌ Ошибка получения баланса, пробуем альтернативный способ",
             timestamp = os.time()
         })
         
-        -- Альтернативный способ получения balanceа
+        -- Альтернативный способ получения баланса
         local character = LocalPlayer.Character
         if character then
             local humanoid = character:FindFirstChild("Humanoid")
@@ -832,11 +832,11 @@ local function getPlayerBalance()
     end
 end
 
--- Buy platform
+-- Покупка платформы
 local function buyPlatform(platformNumber)
     table.insert(logs, {
         action = "PLATFORM_DEBUG",
-        message = "=== ATTEMPT TO BUY PLATFORM " .. platformNumber .. " ===",
+        message = "=== ПОПЫТКА ПОКУПКИ ПЛАТФОРМЫ " .. platformNumber .. " ===",
         timestamp = os.time()
     })
     
@@ -849,13 +849,13 @@ local function buyPlatform(platformNumber)
     
     table.insert(logs, {
         action = "PLATFORM_DEBUG",
-        message = "Sending request to buy platform " .. platformNumber,
+        message = "Отправляем запрос на покупку платформы " .. platformNumber,
         timestamp = os.time()
     })
     
     table.insert(logs, {
         action = "PLATFORM_DEBUG",
-        message = "Request arguments: " .. tostring(args[1][1]) .. ", " .. tostring(args[1][2]),
+        message = "Аргументы запроса: " .. tostring(args[1][1]) .. ", " .. tostring(args[1][2]),
         timestamp = os.time()
     })
     
@@ -866,20 +866,20 @@ local function buyPlatform(platformNumber)
     if success then
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "✅ Platform purchase request " .. platformNumber .. " отправлен успешно",
+            message = "✅ Запрос на покупку платформы " .. platformNumber .. " отправлен успешно",
             timestamp = os.time()
         })
         
         table.insert(logs, {
             action = "BUY_PLATFORM",
             item = "Platform " .. platformNumber,
-            reason = "Куплена platform",
+            reason = "Куплена платформа",
             timestamp = os.time()
         })
     else
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "❌ ОШИБКА при покупке platformsы " .. platformNumber .. ": " .. tostring(error),
+            message = "❌ ОШИБКА при покупке платформы " .. platformNumber .. ": " .. tostring(error),
             timestamp = os.time()
         })
     end
@@ -891,23 +891,23 @@ local function buyPlatform(platformNumber)
     })
 end
 
--- Testовая функция for диагностики покупки platforms
+-- Тестовая функция для диагностики покупки платформ
 local function testPlatformBuying()
-    -- Простая проверка доступности platforms
+    -- Простая проверка доступности платформ
     local plotNumber = LocalPlayer:GetAttribute("Plot")
     if plotNumber then
         local plot = workspace.Plots[tostring(plotNumber)]
         if plot and plot:FindFirstChild("Brainrots") then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "✅ Platforms available for purchase",
+                message = "✅ Платформы доступны для покупки",
                 timestamp = os.time()
             })
         end
     end
 end
 
--- Авто-покупка platforms
+-- Авто-покупка платформ
 local function autoBuyPlatforms()
     table.insert(logs, {
         action = "PLATFORM_DEBUG",
@@ -920,7 +920,7 @@ local function autoBuyPlatforms()
         if not CONFIG.AUTO_BUY_PLATFORMS then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "Авто-покупка platforms отключена in конфигурации",
+                message = "Авто-покупка платформ отключена в конфигурации",
                 timestamp = os.time()
             })
             return
@@ -928,7 +928,7 @@ local function autoBuyPlatforms()
         
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Авто-покупка platforms включена, начинаем проверку...",
+            message = "Авто-покупка платформ включена, начинаем проверку...",
             timestamp = os.time()
         })
         
@@ -936,7 +936,7 @@ local function autoBuyPlatforms()
         if not currentPlot then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "Current plot not found for platform purchase",
+                message = "Не найден текущий плот для покупки платформ",
                 timestamp = os.time()
             })
             return
@@ -944,7 +944,7 @@ local function autoBuyPlatforms()
         
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Found plot: " .. tostring(currentPlot),
+            message = "Найден плот: " .. tostring(currentPlot),
             timestamp = os.time()
         })
         
@@ -952,7 +952,7 @@ local function autoBuyPlatforms()
         if not brainrots then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "Не found Brainrots on плоте for покупки platforms",
+                message = "Не найден Brainrots на плоте для покупки платформ",
                 timestamp = os.time()
             })
             return
@@ -960,7 +960,7 @@ local function autoBuyPlatforms()
         
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Найден Brainrots, проверяем platformsы...",
+            message = "Найден Brainrots, проверяем платформы...",
             timestamp = os.time()
         })
         
@@ -971,7 +971,7 @@ local function autoBuyPlatforms()
         
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Checking platforms for purchase. Balance: $" .. playerBalance,
+            message = "Проверяем платформы для покупки. Баланс: $" .. playerBalance,
             timestamp = os.time()
         })
         
@@ -979,13 +979,13 @@ local function autoBuyPlatforms()
         if dataRemoteEvent then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "dataRemoteEvent found: " .. tostring(dataRemoteEvent),
+                message = "dataRemoteEvent найден: " .. tostring(dataRemoteEvent),
                 timestamp = os.time()
             })
         else
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "ERROR: dataRemoteEvent not found!",
+                message = "ОШИБКА: dataRemoteEvent не найден!",
                 timestamp = os.time()
             })
         end
@@ -997,21 +997,21 @@ local function autoBuyPlatforms()
                 -- Проверяем PlatformPrice.Money вместо просто PlatformPrice
                 local platformPrice = platform:GetAttribute("PlatformPrice")
                 if platformPrice then
-                    -- Проверяем, is ли у PlatformPrice атрибут Money
+                    -- Проверяем, есть ли у PlatformPrice атрибут Money
                     local platformPriceMoney = platformPrice.Money
                     if platformPriceMoney then
-                        -- Парсим цену from PlatformPrice.Money
+                        -- Парсим цену из PlatformPrice.Money
                         local priceText = tostring(platformPriceMoney)
                         local priceValue = priceText:match("%$(%d+,?%d*%d*)")
                         if priceValue then
-                            -- Убираем запятые and конвертируем in число
+                            -- Убираем запятые и конвертируем в число
                             local cleanPrice = priceValue:gsub(",", "")
                             local price = tonumber(cleanPrice) or 0
                         
-                            -- Всегда пытаемся купить platformsу, независимо от balanceа
+                            -- Всегда пытаемся купить платформу, независимо от баланса
                             table.insert(logs, {
                                 action = "PLATFORM_DEBUG",
-                                message = "Покупаем platformsу " .. platform.Name .. " за $" .. price .. " (balance: $" .. playerBalance .. ")",
+                                message = "Покупаем платформу " .. platform.Name .. " за $" .. price .. " (баланс: $" .. playerBalance .. ")",
                                 timestamp = os.time()
                             })
                             buyPlatform(platform.Name)
@@ -1025,20 +1025,20 @@ local function autoBuyPlatforms()
         
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Platforms checked: " .. platformsChecked .. ", bought: " .. boughtCount,
+            message = "Проверено платформ: " .. platformsChecked .. ", куплено: " .. boughtCount,
             timestamp = os.time()
         })
         
         if boughtCount > 0 then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "Bought platforms: " .. boughtCount,
+                message = "Куплено платформ: " .. boughtCount,
                 timestamp = os.time()
             })
         else
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "No platforms for покупки",
+                message = "Нет платформ для покупки",
                 timestamp = os.time()
             })
         end
@@ -1047,7 +1047,7 @@ local function autoBuyPlatforms()
     if not success then
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "Error in autoBuyPlatforms: " .. tostring(error),
+            message = "Ошибка в autoBuyPlatforms: " .. tostring(error),
             timestamp = os.time()
         })
     end
@@ -1059,26 +1059,26 @@ local function autoBuyPlatforms()
     })
 end
 
--- Check platform availability (is it visible in game)
+-- Проверка доступности платформы (видна ли она в игре)
 local function isPlatformAvailable(platform)
-    -- Проверяем, is ли у platformsы PlatformPrice.Money - if is, then подиум недоступен
+    -- Проверяем, есть ли у платформы PlatformPrice.Money - если есть, то подиум недоступен
     local platformPrice = platform:GetAttribute("PlatformPrice")
     if platformPrice then
-        -- Проверяем, is ли у PlatformPrice атрибут Money
+        -- Проверяем, есть ли у PlatformPrice атрибут Money
         local platformPriceMoney = platformPrice.Money
         if platformPriceMoney then
-            return false -- Подиум недоступен, так как is цена for покупки
+            return false -- Подиум недоступен, так как есть цена для покупки
         end
     end
     
-    -- Проверяем, is ли у platformsы видимые части
+    -- Проверяем, есть ли у платформы видимые части
     local hasVisibleParts = false
     
-    -- Проверяем все дочерние объекты platformsы
+    -- Проверяем все дочерние объекты платформы
     for _, child in pairs(platform:GetChildren()) do
         if child:IsA("BasePart") then
-            -- Проверяем, видна ли часть (not прозрачная)
-            -- Не проверяем Visible, так как not все BasePart имеют это свойство
+            -- Проверяем, видна ли часть (не прозрачная)
+            -- Не проверяем Visible, так как не все BasePart имеют это свойство
             if child.Transparency < 1 then
                 hasVisibleParts = true
                 break
@@ -1098,13 +1098,13 @@ local function isPlatformAvailable(platform)
     return hasVisibleParts
 end
 
--- Ensure PrimaryPart for platform if missing
+-- Установка PrimaryPart для платформы если его нет
 local function ensurePlatformPrimaryPart(platform)
     if platform.PrimaryPart then
         return true
     end
     
-    -- Ищем подходящую часть for PrimaryPart
+    -- Ищем подходящую часть для PrimaryPart
     local candidates = {}
     
     -- Ищем Hitbox как основной кандидат
@@ -1113,79 +1113,79 @@ local function ensurePlatformPrimaryPart(platform)
         table.insert(candidates, hitbox)
     end
     
-    -- Ищем любые BasePart in platformsе
+    -- Ищем любые BasePart в платформе
     for _, child in pairs(platform:GetChildren()) do
         if child:IsA("BasePart") and child.Name ~= "Hitbox" then
             table.insert(candidates, child)
         end
     end
     
-    -- Устанавливаем первый foundный BasePart как PrimaryPart
+    -- Устанавливаем первый найденный BasePart как PrimaryPart
     if #candidates > 0 then
         platform.PrimaryPart = candidates[1]
-        print("PrimaryPart set for platform " .. platform.Name .. " (" .. candidates[1].Name .. ")")
+        print("Установлен PrimaryPart для платформы " .. platform.Name .. " (" .. candidates[1].Name .. ")")
         return true
     end
     
     return false
 end
 
--- Auto-collect coins from platforms
+-- Авто-сбор монет с платформ
 local function autoCollectCoins()
     local success, error = pcall(function()
         local currentPlot = getCurrentPlot()
         if not currentPlot then
-            print("Не found текущий плот for сбора монет")
+            print("Не найден текущий плот для сбора монет")
             return
         end
         
         local brainrots = currentPlot:FindFirstChild("Brainrots")
         if not brainrots then
-            print("Не found Brainrots on плоте")
+            print("Не найден Brainrots на плоте")
             return
         end
         
         local collectedCount = 0
         local character = LocalPlayer.Character
         if not character then
-            print("Character not found for сбора монет")
+            print("Персонаж не найден для сбора монет")
             return
         end
         
         -- Сохраняем текущую позицию персонажа
         local originalPosition = character:GetPrimaryPartCFrame()
         
-        print("Found platforms: " .. #brainrots:GetChildren())
+        print("Найдено платформ: " .. #brainrots:GetChildren())
         if CONFIG.DEBUG_COLLECT_COINS then
-            print("List of all platforms:")
+            print("Список всех платформ:")
             for _, platform in pairs(brainrots:GetChildren()) do
                 print("  - " .. platform.Name .. " (тип: " .. platform.ClassName .. ")")
             end
         end
         
         for _, platform in pairs(brainrots:GetChildren()) do
-            if platform:IsA("Model") and platform.Name:match("^%d+$") then -- Только platformsы with числовыми именами
-                -- Проверяем доступность platformsы (видна ли она)
+            if platform:IsA("Model") and platform.Name:match("^%d+$") then -- Только платформы с числовыми именами
+                -- Проверяем доступность платформы (видна ли она)
                 if isPlatformAvailable(platform) then
                     if CONFIG.DEBUG_COLLECT_COINS then
-                        print("Обрабатываем доступную platformsу: " .. platform.Name)
+                        print("Обрабатываем доступную платформу: " .. platform.Name)
                     end
                     
-                    -- Устанавливаем PrimaryPart if его нет
+                    -- Устанавливаем PrimaryPart если его нет
                     if not ensurePlatformPrimaryPart(platform) then
                         if CONFIG.DEBUG_COLLECT_COINS then
-                            print("У platformsы " .. platform.Name .. " нет подходящих частей for PrimaryPart")
+                            print("У платформы " .. platform.Name .. " нет подходящих частей для PrimaryPart")
                         end
                     else
                     
-                    -- Просто телепортируемся к platformsе for сбора монет
+                    -- Просто телепортируемся к платформе для сбора монет
                     local platformPosition = platform.PrimaryPart.Position
                     character:SetPrimaryPartCFrame(CFrame.new(platformPosition + Vector3.new(0, 3, 0)))
                     wait(0.2)
                     
                     collectedCount = collectedCount + 1
                     if CONFIG.DEBUG_COLLECT_COINS then
-                        print("Teleported to platformsе " .. platform.Name .. " for сбора монет")
+                        print("Телепортировались к платформе " .. platform.Name .. " для сбора монет")
                     end
                     
                     wait(0.1)
@@ -1193,9 +1193,9 @@ local function autoCollectCoins()
                 elseif CONFIG.DEBUG_COLLECT_COINS then
                     local platformPrice = platform:GetAttribute("PlatformPrice")
                     if platformPrice then
-                        print("Пропускаем недоступную platformsу: " .. platform.Name .. " (is PlatformPrice: " .. platformPrice .. ")")
+                        print("Пропускаем недоступную платформу: " .. platform.Name .. " (есть PlatformPrice: " .. platformPrice .. ")")
                     else
-                        print("Пропускаем недоступную platformsу: " .. platform.Name .. " (not видна in игре)")
+                        print("Пропускаем недоступную платформу: " .. platform.Name .. " (не видна в игре)")
                     end
                 end
             elseif CONFIG.DEBUG_COLLECT_COINS then
@@ -1203,28 +1203,28 @@ local function autoCollectCoins()
             end
         end
         
-        -- Возвращаемся on исходную позицию
+        -- Возвращаемся на исходную позицию
         character:SetPrimaryPartCFrame(originalPosition)
         
         if collectedCount > 0 then
             table.insert(logs, {
                 action = "COLLECT_COINS",
                 item = "Платформы",
-                reason = "Teleported to " .. collectedCount .. " platforms to collect coins",
+                reason = "Телепортировались к " .. collectedCount .. " платформам для сбора монет",
                 timestamp = os.time()
             })
-            print("Teleported to " .. collectedCount .. " platforms to collect coins")
+            print("Телепортировались к " .. collectedCount .. " платформам для сбора монет")
         else
-            print("No available platforms to collect coins")
+            print("Нет доступных платформ для сбора монет")
         end
     end)
     
     if not success then
-        print("Error in autoCollectCoins: " .. tostring(error))
+        print("Ошибка в autoCollectCoins: " .. tostring(error))
     end
 end
 
--- Get brainrot info on platform
+-- Получение информации о брейнроте на платформе
 local function getPlatformBrainrotInfo(platform)
     local brainrot = platform:FindFirstChild("Brainrot")
     if not brainrot then return nil end
@@ -1243,30 +1243,30 @@ local function getPlatformBrainrotInfo(platform)
     }
 end
 
--- Replace brainrot on platform
+-- Замена брейнрота на платформе
 local function replaceBrainrotOnPlatform(platform, newBrainrot)
     local character = LocalPlayer.Character
     if not character then 
-        print("Character not found")
+        print("Персонаж не найден")
         protectedPet = nil -- Снимаем защиту при ошибке
         return false 
     end
     
     local humanoid = character:FindFirstChild("Humanoid")
     if not humanoid then 
-        print("Humanoid not found")
+        print("Humanoid не найден")
         protectedPet = nil -- Снимаем защиту при ошибке
         return false 
     end
     
-    -- Пытаемся установить PrimaryPart if его нет
+    -- Пытаемся установить PrimaryPart если его нет
     if not ensurePlatformPrimaryPart(platform) then
-        print("У platformsы " .. platform.Name .. " нет подходящих частей for PrimaryPart")
+        print("У платформы " .. platform.Name .. " нет подходящих частей для PrimaryPart")
         protectedPet = nil -- Снимаем защиту при ошибке
         return false
     end
     
-    -- Собираем деньги with platformsы
+    -- Собираем деньги с платформы
     local hitbox = platform:FindFirstChild("Hitbox")
     if hitbox then
         local proximityPrompt = hitbox:FindFirstChild("ProximityPrompt")
@@ -1278,19 +1278,19 @@ local function replaceBrainrotOnPlatform(platform, newBrainrot)
         end
     end
     
-    -- Protecting pet from sale
+    -- Защищаем пета от продажи
     protectedPet = newBrainrot.tool
     
-    -- Equip the new brainrot
+    -- Берем нового брейнрота в руку
     humanoid:EquipTool(newBrainrot.tool)
     wait(0.2)
     
-    -- Teleporting to platform
+    -- Телепортируемся к платформе
     local platformPosition = platform.PrimaryPart.Position
     character:SetPrimaryPartCFrame(CFrame.new(platformPosition + Vector3.new(0, 5, 0)))
     wait(0.5)
     
-    -- Hold E for 1 second
+    -- Зажимаем E на 1 секунду
     local hitbox = platform:FindFirstChild("Hitbox")
     if hitbox then
         local proximityPrompt = hitbox:FindFirstChild("ProximityPrompt")
@@ -1302,24 +1302,24 @@ local function replaceBrainrotOnPlatform(platform, newBrainrot)
         end
     end
     
-    -- Unprotect pet
+    -- Снимаем защиту с пета
     protectedPet = nil
     
     return true
 end
 
--- Авто-замена брейнротов on platformsах
+-- Авто-замена брейнротов на платформах
 local function autoReplaceBrainrots()
     local success, error = pcall(function()
         local currentPlot = getCurrentPlot()
         if not currentPlot then
-            print("Current plot not found for replacing brainrots")
+            print("Не найден текущий плот для замены брейнротов")
             return
         end
         
         local brainrots = currentPlot:FindFirstChild("Brainrots")
         if not brainrots then
-            print("Не found Brainrots on плоте")
+            print("Не найден Brainrots на плоте")
             return
         end
         
@@ -1339,15 +1339,15 @@ local function autoReplaceBrainrots()
         else
             bestBrainrot = getBestBrainrotFromInventory()
             if not bestBrainrot then
-                print("No best brainrot found in inventory")
+                print("Не найден лучший брейнрот в инвентаре")
                 return
             end
-            print("Лучший брейнрот in inventory: " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
+            print("Лучший брейнрот в инвентаре: " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
         end
         
-        print("Найдено platforms for замены: " .. #brainrots:GetChildren())
+        print("Найдено платформ для замены: " .. #brainrots:GetChildren())
         if CONFIG.DEBUG_COLLECT_COINS then
-            print("Список всех platforms for замены:")
+            print("Список всех платформ для замены:")
             for _, platform in pairs(brainrots:GetChildren()) do
                 print("  - " .. platform.Name .. " (тип: " .. platform.ClassName .. ")")
             end
@@ -1356,10 +1356,10 @@ local function autoReplaceBrainrots()
         local replacedCount = 0
         
         for _, platform in pairs(brainrots:GetChildren()) do
-            if platform:IsA("Model") and platform.Name:match("^%d+$") then -- Только platformsы with числовыми именами
-                -- Проверяем доступность platformsы (видна ли она)
+            if platform:IsA("Model") and platform.Name:match("^%d+$") then -- Только платформы с числовыми именами
+                -- Проверяем доступность платформы (видна ли она)
                 if isPlatformAvailable(platform) then
-                    -- Пытаемся установить PrimaryPart if его нет
+                    -- Пытаемся установить PrimaryPart если его нет
                     if ensurePlatformPrimaryPart(platform) then
                     local currentBrainrot = getPlatformBrainrotInfo(platform)
                     local shouldReplace = false
@@ -1368,15 +1368,15 @@ local function autoReplaceBrainrots()
                     if currentBrainrot then
                         print("Платформа " .. platform.Name .. ": " .. currentBrainrot.name .. " (" .. currentBrainrot.moneyPerSecond .. "/s)")
                         
-                        -- Сравниваем MoneyPerSecond: if у пета in inventory больше, чем on platformsе
+                        -- Сравниваем MoneyPerSecond: если у пета в инвентаре больше, чем на платформе
                         if bestBrainrot.moneyPerSecond > currentBrainrot.moneyPerSecond then
                             shouldReplace = true
-                            replaceReason = "замена on лучшего (" .. currentBrainrot.moneyPerSecond .. "/s -> " .. bestBrainrot.moneyPerSecond .. "/s)"
+                            replaceReason = "замена на лучшего (" .. currentBrainrot.moneyPerSecond .. "/s -> " .. bestBrainrot.moneyPerSecond .. "/s)"
                         end
                     else
                         print("Платформа " .. platform.Name .. ": пустая")
                         shouldReplace = true
-                        replaceReason = "установка on пустую platformsу"
+                        replaceReason = "установка на пустую платформу"
                     end
                     
                     if shouldReplace then
@@ -1384,11 +1384,11 @@ local function autoReplaceBrainrots()
                         if success then
                             replacedCount = replacedCount + 1
                             if currentBrainrot then
-                                print("Replaced brainrot on platform " .. platform.Name .. 
+                                print("Заменен брейнрот на платформе " .. platform.Name .. 
                                       " с " .. currentBrainrot.name .. " (" .. currentBrainrot.moneyPerSecond .. "/s) " ..
                                       "на " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
                             else
-                                print("Installed brainrot on empty platform " .. platform.Name .. 
+                                print("Установлен брейнрот на пустую платформу " .. platform.Name .. 
                                       ": " .. bestBrainrot.name .. " (" .. bestBrainrot.moneyPerSecond .. "/s)")
                             end
                         end
@@ -1396,18 +1396,18 @@ local function autoReplaceBrainrots()
                         wait(2)
                     end
                 else
-                    print("У platformsы " .. platform.Name .. " нет подходящих частей for PrimaryPart")
+                    print("У платформы " .. platform.Name .. " нет подходящих частей для PrimaryPart")
                 end
                 elseif CONFIG.DEBUG_COLLECT_COINS then
                     local platformPrice = platform:GetAttribute("PlatformPrice")
                     if platformPrice then
-                        print("Пропускаем недоступную platformsу for замены: " .. platform.Name .. " (is PlatformPrice: " .. platformPrice .. ")")
+                        print("Пропускаем недоступную платформу для замены: " .. platform.Name .. " (есть PlatformPrice: " .. platformPrice .. ")")
                     else
-                        print("Пропускаем недоступную platformsу for замены: " .. platform.Name .. " (not видна in игре)")
+                        print("Пропускаем недоступную платформу для замены: " .. platform.Name .. " (не видна в игре)")
                     end
                 end
             elseif CONFIG.DEBUG_COLLECT_COINS then
-                print("Пропускаем объект for замены: " .. platform.Name .. " (тип: " .. platform.ClassName .. ")")
+                print("Пропускаем объект для замены: " .. platform.Name .. " (тип: " .. platform.ClassName .. ")")
             end
         end
         
@@ -1415,25 +1415,25 @@ local function autoReplaceBrainrots()
             table.insert(logs, {
                 action = "REPLACE_BRAINROT",
                 item = "Платформы",
-                reason = "Replaced/installed brainrots: " .. replacedCount,
+                reason = "Заменено/установлено брейнротов: " .. replacedCount,
                 timestamp = os.time()
             })
-            print("Replaced/installed brainrots: " .. replacedCount)
+            print("Заменено/установлено брейнротов: " .. replacedCount)
         else
-            print("No platforms to replace/install brainrots")
+            print("Нет платформ для замены/установки брейнротов")
         end
     end)
     
     if not success then
-        print("Error in autoReplaceBrainrots: " .. tostring(error))
+        print("Ошибка в autoReplaceBrainrots: " .. tostring(error))
     end
 end
 
--- Get best seed from inventory for planting
+-- Получение лучшего семени из инвентаря для посадки
 local function getBestSeedFromInventory()
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "🔍 Поиск seeds in inventory...",
+        message = "🔍 Поиск семян в инвентаре...",
         timestamp = os.time()
     })
     local backpack = LocalPlayer:WaitForChild("Backpack")
@@ -1443,11 +1443,11 @@ local function getBestSeedFromInventory()
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "Backpack found: " .. tostring(backpack ~= nil),
+        message = "Backpack найден: " .. tostring(backpack ~= nil),
         timestamp = os.time()
     })
     
-    -- Приоритет редкости seeds
+    -- Приоритет редкости семян
     local seedRarity = {
         ["Cactus Seed"] = 1,
         ["Strawberry Seed"] = 1,
@@ -1469,12 +1469,12 @@ local function getBestSeedFromInventory()
         totalItems = totalItems + 1
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "Предмет in inventory: " .. item.Name .. " (тип: " .. item.ClassName .. ")",
+            message = "Предмет в инвентаре: " .. item.Name .. " (тип: " .. item.ClassName .. ")",
             timestamp = os.time()
         })
         if item:IsA("Tool") and item.Name:match("Seed$") then
             seedCount = seedCount + 1
-            -- Убираем количество from названия for поиска редкости
+            -- Убираем количество из названия для поиска редкости
             local cleanName = item.Name:gsub("%[x%d+%]%s*", "")
             local rarity = seedRarity[cleanName] or 0
             table.insert(logs, {
@@ -1482,7 +1482,7 @@ local function getBestSeedFromInventory()
                 message = "🌱 Найдено семя: " .. item.Name .. " (чистое: " .. cleanName .. ", редкость: " .. rarity .. ")",
                 timestamp = os.time()
             })
-            -- Если это первое семя или семя with лучшей редкостью
+            -- Если это первое семя или семя с лучшей редкостью
             if not bestSeed or rarity > bestRarity then
                 bestRarity = rarity
                 bestSeed = item
@@ -1497,24 +1497,24 @@ local function getBestSeedFromInventory()
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "Total items in inventory: " .. totalItems,
+        message = "Всего предметов в инвентаре: " .. totalItems,
         timestamp = os.time()
     })
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "Total seeds in inventory: " .. seedCount,
+        message = "Всего семян в инвентаре: " .. seedCount,
         timestamp = os.time()
     })
     if bestSeed then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "✅ Best seed: " .. bestSeed.Name .. " (редкость: " .. bestRarity .. ")",
+            message = "✅ Лучшее семя: " .. bestSeed.Name .. " (редкость: " .. bestRarity .. ")",
             timestamp = os.time()
         })
     else
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Семена not foundы",
+            message = "❌ Семена не найдены",
             timestamp = os.time()
         })
     end
@@ -1522,14 +1522,14 @@ local function getBestSeedFromInventory()
     return bestSeed
 end
 
--- Получение пустого места on грядке
+-- Получение пустого места на грядке
 local function getEmptyPlotSpot()
     -- Получаем номер текущего плота
     local plotNumber = LocalPlayer:GetAttribute("Plot")
     if not plotNumber then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Не found номер плота у игрока",
+            message = "❌ Не найден номер плота у игрока",
             timestamp = os.time()
         })
         return nil
@@ -1539,7 +1539,7 @@ local function getEmptyPlotSpot()
     if not plot then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Plot " .. plotNumber .. " not found in workspace.Plots",
+            message = "❌ Плот " .. plotNumber .. " не найден в workspace.Plots",
             timestamp = os.time()
         })
         return nil
@@ -1547,16 +1547,16 @@ local function getEmptyPlotSpot()
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "🔍 Searching for empty spots in plot " .. plotNumber,
+        message = "🔍 Поиск пустых мест в плоту " .. plotNumber,
         timestamp = os.time()
     })
     
-    -- Проверяем все ряды (Rows) on наличие пустых мест
+    -- Проверяем все ряды (Rows) на наличие пустых мест
     local totalSpots = 0
     local emptySpots = 0
     local emptySpotsList = {}
     
-    -- Получаем список всех plants on плоту
+    -- Получаем список всех растений на плоту
     local plants = plot:FindFirstChild("Plants")
     local existingPlants = {}
     if plants then
@@ -1573,12 +1573,12 @@ local function getEmptyPlotSpot()
         if row.Name:match("^%d+$") then -- Проверяем что это числовой ряд
             local grass = row:FindFirstChild("Grass")
             if grass then
-                -- Проверяем все места in этом ряду
+                -- Проверяем все места в этом ряду
                 for _, spot in pairs(grass:GetChildren()) do
                     totalSpots = totalSpots + 1
                     local canPlace = spot:GetAttribute("CanPlace")
                     if canPlace == true then
-                        -- Проверяем, is ли уже plant in этом конкретном месте
+                        -- Проверяем, есть ли уже растение в этом конкретном месте
                         local spotKey = row.Name .. "_" .. spot.Name
                         local hasPlant = existingPlants[spotKey] or false
                         
@@ -1600,24 +1600,24 @@ local function getEmptyPlotSpot()
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "Total spots: " .. totalSpots .. ", empty: " .. emptySpots,
+        message = "Всего мест: " .. totalSpots .. ", пустых: " .. emptySpots,
         timestamp = os.time()
     })
     
     if emptySpots == 0 then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ No empty spots found",
+            message = "❌ Пустых мест не найдено",
             timestamp = os.time()
         })
         return nil
     end
     
-    -- Возвращаем первое foundное пустое место
+    -- Возвращаем первое найденное пустое место
     return emptySpotsList[1]
 end
 
--- Get worst plant for replacement
+-- Получение худшего растения для замены
 local function getWorstPlantForReplacement()
     if not currentPlot then
         currentPlot = getCurrentPlot()
@@ -1634,7 +1634,7 @@ local function getWorstPlantForReplacement()
     local worstPlant = nil
     local worstDamage = math.huge
     
-    -- Приоритет редкости plants (чем выше редкость, тем лучше)
+    -- Приоритет редкости растений (чем выше редкость, тем лучше)
     local plantRarity = {
         ["Cactus"] = 1,
         ["Strawberry"] = 1,
@@ -1667,7 +1667,7 @@ local function getWorstPlantForReplacement()
     return worstPlant
 end
 
--- Удаление растения with грядки
+-- Удаление растения с грядки
 local function removePlantFromPlot(plantId)
     local args = {
         {
@@ -1680,22 +1680,22 @@ local function removePlantFromPlot(plantId)
     table.insert(logs, {
         action = "REMOVE_PLANT",
         item = "Plant ID: " .. plantId,
-        reason = "Removed plant for освобождения места",
+        reason = "Удалено растение для освобождения места",
         timestamp = os.time()
     })
     
     if CONFIG.DEBUG_PLANTING then
-        print("Removed plant with ID: " .. plantId)
+        print("Удалено растение с ID: " .. plantId)
     end
 end
 
--- Plant seed
+-- Посадка семени
 local function plantSeed(seed, spotData)
     local character = LocalPlayer.Character
     if not character then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Character not found for посадки",
+            message = "❌ Персонаж не найден для посадки",
             timestamp = os.time()
         })
         return false
@@ -1705,17 +1705,17 @@ local function plantSeed(seed, spotData)
     if not humanoid then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Humanoid not found for посадки",
+            message = "❌ Humanoid не найден для посадки",
             timestamp = os.time()
         })
         return false
     end
     
-    -- Берем семя in руку
+    -- Берем семя в руку
     humanoid:EquipTool(seed)
     wait(0.2)
     
-    -- Генерируем UUID for растения
+    -- Генерируем UUID для растения
     local plantId = game:GetService("HttpService"):GenerateGUID(false)
     
     -- Очищаем название семени от количества
@@ -1723,14 +1723,14 @@ local function plantSeed(seed, spotData)
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "🌱 Attempting to plant: " .. cleanSeedName .. " в Row " .. spotData.row .. " с ID: " .. plantId,
+        message = "🌱 Попытка посадки: " .. cleanSeedName .. " в Row " .. spotData.row .. " с ID: " .. plantId,
         timestamp = os.time()
     })
     
     -- Получаем номер плота
     local plotNumber = LocalPlayer:GetAttribute("Plot")
     
-    -- ИСПРАВЛЕНИЕ: Floor должен быть числом (индексом), а not объектом
+    -- ИСПРАВЛЕНИЕ: Floor должен быть числом (индексом), а не объектом
     -- Получаем номер места (Spot) как Floor индекс
     local floorIndex = tonumber(spotData.spot.Name) or 1
     
@@ -1777,7 +1777,7 @@ local function plantSeed(seed, spotData)
     for i, args in ipairs(requestFormats) do
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "📤 Trying format " .. i .. ":",
+            message = "📤 Пробуем формат " .. i .. ":",
             timestamp = os.time()
         })
         
@@ -1801,7 +1801,7 @@ local function plantSeed(seed, spotData)
         local formatSuccess, error = pcall(function()
             if type(args) == "table" and #args > 0 then
                 if type(args[1]) == "table" then
-                    -- Если это таблица, отправляем как is
+                    -- Если это таблица, отправляем как есть
                     dataRemoteEvent:FireServer(args[1])
                 else
                     -- Если это массив аргументов, распаковываем
@@ -1819,30 +1819,30 @@ local function plantSeed(seed, spotData)
                 timestamp = os.time()
             })
             
-            -- Ждем and проверяем результат
+            -- Ждем и проверяем результат
             wait(1.5)
             
             local plot = workspace.Plots[tostring(plotNumber)]
             local plantCreated = false
             
             if plot and plot:FindFirstChild("Plants") then
-                -- Проверяем, is ли plant with нашим ID
+                -- Проверяем, есть ли растение с нашим ID
                 local newPlant = plot.Plants:FindFirstChild(plantId)
                 if newPlant then
                     plantCreated = true
                     table.insert(logs, {
                         action = "PLANT_DEBUG",
-                        message = "🎉 SUCCESS! Plant created with ID: " .. plantId,
+                        message = "🎉 УСПЕХ! Растение создано с ID: " .. plantId,
                         timestamp = os.time()
                     })
                 else
-                    -- Альтернативная проверка: ищем plant in том же ряду with похожим именем
+                    -- Альтернативная проверка: ищем растение в том же ряду с похожим именем
                     for _, plant in pairs(plot.Plants:GetChildren()) do
                         if plant:GetAttribute("Row") == spotData.row and plant.Name == cleanSeedName then
                             plantCreated = true
                             table.insert(logs, {
                                 action = "PLANT_DEBUG",
-                                message = "✅ Plant found in Row " .. spotData.row .. " with именем: " .. plant.Name,
+                                message = "✅ Растение найдено в Row " .. spotData.row .. " с именем: " .. plant.Name,
                                 timestamp = os.time()
                             })
                             break
@@ -1857,7 +1857,7 @@ local function plantSeed(seed, spotData)
             else
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "⚠️ Формат " .. i .. " отправлен, но plant not создано",
+                    message = "⚠️ Формат " .. i .. " отправлен, но растение не создано",
                     timestamp = os.time()
                 })
             end
@@ -1865,7 +1865,7 @@ local function plantSeed(seed, spotData)
             lastError = tostring(error)
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ Формат " .. i .. " not удался: " .. lastError,
+                message = "❌ Формат " .. i .. " не удался: " .. lastError,
                 timestamp = os.time()
             })
         end
@@ -1876,7 +1876,7 @@ local function plantSeed(seed, spotData)
     if not success then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ All formats failed. Last error: " .. lastError,
+            message = "❌ Все форматы не удались. Последняя ошибка: " .. lastError,
             timestamp = os.time()
         })
         return false
@@ -1896,25 +1896,25 @@ local function plantSeed(seed, spotData)
     table.insert(logs, {
         action = "PLANT_SEED",
         item = seed.Name,
-        reason = "Посажено plant on грядку (Row " .. spotData.row .. ")",
+        reason = "Посажено растение на грядку (Row " .. spotData.row .. ")",
         timestamp = os.time()
     })
     
     if CONFIG.DEBUG_PLANTING then
-        print("Seed planted: " .. seed.Name .. " с ID: " .. plantId .. " в Row " .. spotData.row)
+        print("Посажено семя: " .. seed.Name .. " с ID: " .. plantId .. " в Row " .. spotData.row)
     end
     
     return true
 end
 
--- Water plant
+-- Полив растения
 local function waterPlant(plantPosition)
     local character = LocalPlayer.Character
     if not character then
         return false
     end
     
-    -- Ищем Water Bucket in inventory
+    -- Ищем Water Bucket в инвентаре
     local waterBucket = nil
     for _, tool in pairs(character:GetChildren()) do
         if tool:IsA("Tool") and tool.Name:match("Water Bucket") then
@@ -1924,7 +1924,7 @@ local function waterPlant(plantPosition)
     end
     
     if not waterBucket then
-        -- Ищем in рюкзаке
+        -- Ищем в рюкзаке
         local backpack = LocalPlayer:WaitForChild("Backpack")
         for _, tool in pairs(backpack:GetChildren()) do
             if tool:IsA("Tool") and tool.Name:match("Water Bucket") then
@@ -1938,14 +1938,14 @@ local function waterPlant(plantPosition)
         return false
     end
     
-    -- Берем ведро in руку
+    -- Берем ведро в руку
     local humanoid = character:FindFirstChild("Humanoid")
     if humanoid then
         humanoid:EquipTool(waterBucket)
         wait(0.1)
     end
     
-    -- Поливаем plant
+    -- Поливаем растение
     local args = {
         {
             Toggle = true,
@@ -1956,17 +1956,17 @@ local function waterPlant(plantPosition)
     useItemRemote:FireServer(unpack(args))
     
     if CONFIG.DEBUG_PLANTING then
-        print("Watered plant at position: " .. tostring(plantPosition))
+        print("Полито растение в позиции: " .. tostring(plantPosition))
     end
     
     return true
 end
 
--- Testовая функция for проверки улучшенной системы посадки
+-- Тестовая функция для проверки улучшенной системы посадки
 local function testImprovedPlantingSystem()
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "=== TEST IMPROVED PLANTING SYSTEM ===",
+        message = "=== ТЕСТ УЛУЧШЕННОЙ СИСТЕМЫ ПОСАДКИ ===",
         timestamp = os.time()
     })
     
@@ -1975,7 +1975,7 @@ local function testImprovedPlantingSystem()
     if not emptySpot then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ No empty spots for test",
+            message = "❌ Нет пустых мест для теста",
             timestamp = os.time()
         })
         return
@@ -1986,7 +1986,7 @@ local function testImprovedPlantingSystem()
     if not bestSeed then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ No seeds for test",
+            message = "❌ Нет семян для теста",
             timestamp = os.time()
         })
         return
@@ -1994,7 +1994,7 @@ local function testImprovedPlantingSystem()
     
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "🧪 Testируем улучшенную систему посадки: " .. bestSeed.Name .. " в Row " .. emptySpot.row,
+        message = "🧪 Тестируем улучшенную систему посадки: " .. bestSeed.Name .. " в Row " .. emptySpot.row,
         timestamp = os.time()
     })
     
@@ -2004,23 +2004,23 @@ local function testImprovedPlantingSystem()
     if success then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "🎉 TEST SUCCESS! Plant planted successfully",
+            message = "🎉 ТЕСТ УСПЕШЕН! Растение посажено успешно",
             timestamp = os.time()
         })
     else
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ TEST FAILED! Plant not planted",
+            message = "❌ ТЕСТ НЕ УДАЛСЯ! Растение не посажено",
             timestamp = os.time()
         })
     end
 end
 
--- Testовая функция for диагностики посадки
+-- Тестовая функция для диагностики посадки
 local function testPlantingDiagnostics()
     table.insert(logs, {
         action = "PLANT_DEBUG",
-        message = "=== PLANTING DIAGNOSTICS ===",
+        message = "=== ДИАГНОСТИКА ПОСАДКИ ===",
         timestamp = os.time()
     })
     
@@ -2028,13 +2028,13 @@ local function testPlantingDiagnostics()
     if dataRemoteEvent then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "✅ dataRemoteEvent found: " .. tostring(dataRemoteEvent),
+            message = "✅ dataRemoteEvent найден: " .. tostring(dataRemoteEvent),
             timestamp = os.time()
         })
     else
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ dataRemoteEvent not found!",
+            message = "❌ dataRemoteEvent не найден!",
             timestamp = os.time()
         })
     end
@@ -2044,7 +2044,7 @@ local function testPlantingDiagnostics()
     if character then
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "✅ Character found: " .. character.Name,
+            message = "✅ Персонаж найден: " .. character.Name,
             timestamp = os.time()
         })
         
@@ -2052,20 +2052,20 @@ local function testPlantingDiagnostics()
         if humanoid then
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "✅ Humanoid found",
+                message = "✅ Humanoid найден",
                 timestamp = os.time()
             })
         else
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ Humanoid not found",
+                message = "❌ Humanoid не найден",
                 timestamp = os.time()
             })
         end
     else
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Character not found",
+            message = "❌ Персонаж не найден",
             timestamp = os.time()
         })
     end
@@ -2083,7 +2083,7 @@ local function testPlantingDiagnostics()
         if plot then
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "✅ Plot found in workspace",
+                message = "✅ Плот найден в workspace",
                 timestamp = os.time()
             })
             
@@ -2092,33 +2092,33 @@ local function testPlantingDiagnostics()
                 local plantCount = #plants:GetChildren()
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "✅ Plants контейнер found, plants: " .. plantCount,
+                    message = "✅ Plants контейнер найден, растений: " .. plantCount,
                     timestamp = os.time()
                 })
             else
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "❌ Plants контейнер not found",
+                    message = "❌ Plants контейнер не найден",
                     timestamp = os.time()
                 })
             end
         else
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ Plot not found in workspace",
+                message = "❌ Плот не найден в workspace",
                 timestamp = os.time()
             })
         end
     else
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "❌ Plot attribute not found on player",
+            message = "❌ Атрибут Plot не найден у игрока",
             timestamp = os.time()
         })
     end
 end
 
--- Авто-посадка seeds
+-- Авто-посадка семян
 local function autoPlantSeeds()
     table.insert(logs, {
         action = "PLANT_DEBUG",
@@ -2136,7 +2136,7 @@ local function autoPlantSeeds()
         if not CONFIG.AUTO_PLANT_SEEDS then
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ Авто-посадка seeds отключена in конфигурации",
+                message = "❌ Авто-посадка семян отключена в конфигурации",
                 timestamp = os.time()
             })
             return
@@ -2144,7 +2144,7 @@ local function autoPlantSeeds()
         
         table.insert(logs, {
             action = "PLANT_DEBUG",
-            message = "✅ Авто-посадка seeds включена, начинаем...",
+            message = "✅ Авто-посадка семян включена, начинаем...",
             timestamp = os.time()
         })
         table.insert(logs, {
@@ -2169,7 +2169,7 @@ local function autoPlantSeeds()
         if not bestSeed then
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ No seeds for посадки in inventory",
+                message = "❌ Нет семян для посадки в инвентаре",
                 timestamp = os.time()
             })
             return
@@ -2186,7 +2186,7 @@ local function autoPlantSeeds()
         if emptySpot then
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "🌱 Сажаем in пустое место: Row " .. emptySpot.row .. ", Spot " .. emptySpot.spot.Name,
+                message = "🌱 Сажаем в пустое место: Row " .. emptySpot.row .. ", Spot " .. emptySpot.spot.Name,
                 timestamp = os.time()
             })
             
@@ -2198,45 +2198,45 @@ local function autoPlantSeeds()
                 timestamp = os.time()
             })
             
-            -- Сажаем in пустое место
+            -- Сажаем в пустое место
             local planted = plantSeed(bestSeed, emptySpot)
             if planted then
                 table.insert(logs, {
                     action = "PLANT_SEED",
                     item = bestSeed.Name,
                     location = "Row " .. emptySpot.row,
-                    reason = "Посажено in пустое место",
+                    reason = "Посажено в пустое место",
                     timestamp = os.time()
                 })
             else
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "❌ Не удалось посадить семя in пустое место",
+                    message = "❌ Не удалось посадить семя в пустое место",
                     timestamp = os.time()
                 })
             end
         else
             table.insert(logs, {
                 action = "PLANT_DEBUG",
-                message = "❌ No пустых мест, ищем худшее plant for замены",
+                message = "❌ Нет пустых мест, ищем худшее растение для замены",
                 timestamp = os.time()
             })
-            -- No пустых мест, ищем худшее plant for замены
+            -- Нет пустых мест, ищем худшее растение для замены
             local worstPlant = getWorstPlantForReplacement()
             if worstPlant then
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "✅ Найдено худшее plant for замены: " .. worstPlant.Name,
+                    message = "✅ Найдено худшее растение для замены: " .. worstPlant.Name,
                     timestamp = os.time()
                 })
                 local plantId = worstPlant:GetAttribute("ID")
                 if plantId then
-                    -- Удаляем худшее plant
+                    -- Удаляем худшее растение
                     removePlantFromPlot(plantId)
-                    wait(0.5) -- Ждем пока plant удалится
+                    wait(0.5) -- Ждем пока растение удалится
                     
-                    -- Ищем hitbox for этого места
-                    -- Находим место где было plant for посадки нового
+                    -- Ищем hitbox для этого места
+                    -- Находим место где было растение для посадки нового
                     local plotNumber = LocalPlayer:GetAttribute("Plot")
                     if plotNumber then
                         local plot = workspace.Plots[tostring(plotNumber)]
@@ -2247,7 +2247,7 @@ local function autoPlantSeeds()
                                 if row then
                                     local grass = row:FindFirstChild("Grass")
                                     if grass then
-                                        -- Ищем первое доступное место in этом ряду
+                                        -- Ищем первое доступное место в этом ряду
                                         for _, spot in pairs(grass:GetChildren()) do
                                             local canPlace = spot:GetAttribute("CanPlace")
                                             if canPlace == true then
@@ -2265,7 +2265,7 @@ local function autoPlantSeeds()
                                                         action = "PLANT_SEED",
                                                         item = bestSeed.Name,
                                                         location = "Row " .. plantRow,
-                                                        reason = "Заменено plant " .. worstPlant.Name,
+                                                        reason = "Заменено растение " .. worstPlant.Name,
                                                         timestamp = os.time()
                                                     })
                                                 else
@@ -2281,14 +2281,14 @@ local function autoPlantSeeds()
                                     else
                                         table.insert(logs, {
                                             action = "PLANT_DEBUG",
-                                            message = "❌ Не found Grass in ряду " .. plantRow,
+                                            message = "❌ Не найден Grass в ряду " .. plantRow,
                                             timestamp = os.time()
                                         })
                                     end
                                 else
                                     table.insert(logs, {
                                         action = "PLANT_DEBUG",
-                                        message = "❌ Не found ряд " .. plantRow,
+                                        message = "❌ Не найден ряд " .. plantRow,
                                         timestamp = os.time()
                                     })
                                 end
@@ -2302,14 +2302,14 @@ local function autoPlantSeeds()
                         else
                             table.insert(logs, {
                                 action = "PLANT_DEBUG",
-                                message = "❌ Plot " .. plotNumber .. " not found",
+                                message = "❌ Плот " .. plotNumber .. " не найден",
                                 timestamp = os.time()
                             })
                         end
                     else
                         table.insert(logs, {
                             action = "PLANT_DEBUG",
-                            message = "❌ Не found номер плота у игрока",
+                            message = "❌ Не найден номер плота у игрока",
                             timestamp = os.time()
                         })
                     end
@@ -2323,7 +2323,7 @@ local function autoPlantSeeds()
             else
                 table.insert(logs, {
                     action = "PLANT_DEBUG",
-                    message = "❌ No места for посадки and нет plants for замены",
+                    message = "❌ Нет места для посадки и нет растений для замены",
                     timestamp = os.time()
                 })
             end
@@ -2331,11 +2331,11 @@ local function autoPlantSeeds()
     end)
     
     if not success then
-        print("Error in autoPlantSeeds: " .. tostring(error))
+        print("Ошибка в autoPlantSeeds: " .. tostring(error))
     end
 end
 
--- Авто-полив plants
+-- Авто-полив растений
 local function autoWaterPlants()
     local success, error = pcall(function()
         if not CONFIG.AUTO_WATER_PLANTS then
@@ -2359,7 +2359,7 @@ local function autoWaterPlants()
         -- Поливаем только недавно посаженные растения
         for plantId, seedData in pairs(plantedSeeds) do
             if seedData.needsWatering then
-                -- Проверяем, существует ли plant
+                -- Проверяем, существует ли растение
                 local plant = nil
                 for _, p in pairs(plants:GetChildren()) do
                     if p:GetAttribute("ID") == plantId then
@@ -2378,34 +2378,34 @@ local function autoWaterPlants()
                             if watered then
                                 wateredCount = wateredCount + 1
                                 if CONFIG.DEBUG_PLANTING then
-                                    print("Полито plant: " .. seedData.plantName)
+                                    print("Полито растение: " .. seedData.plantName)
                                 end
                             end
                         end
                     end
                     
-                    -- Проверяем, выросло ли plant (через 30 секунд считаем выросшим)
+                    -- Проверяем, выросло ли растение (через 30 секунд считаем выросшим)
                     if os.time() - seedData.timestamp > 30 then
                         seedData.needsWatering = false
                     end
                 else
-                    -- Plant not found, убираем from списка
+                    -- Растение не найдено, убираем из списка
                     plantedSeeds[plantId] = nil
                 end
             end
         end
         
         if wateredCount > 0 and CONFIG.DEBUG_PLANTING then
-            print("Полито plants: " .. wateredCount)
+            print("Полито растений: " .. wateredCount)
         end
     end)
     
     if not success then
-        print("Error in autoWaterPlants: " .. tostring(error))
+        print("Ошибка в autoWaterPlants: " .. tostring(error))
     end
 end
 
--- Копирование логов in буфер обмена
+-- Копирование логов в буфер обмена
 local function copyLogsToClipboard()
     if #logs == 0 then
         print("Логи пусты!")
@@ -2419,11 +2419,11 @@ local function copyLogsToClipboard()
         if log.action == "PLANT_DEBUG" or log.action == "PLATFORM_DEBUG" then
             -- Для отладочных сообщений используем message
             logText = logText .. string.format("[%s] %s: %s\n", 
-                timeStr, log.action, log.message or "No сообщения")
+                timeStr, log.action, log.message or "Нет сообщения")
         else
             -- Для обычных логов используем item и reason
             logText = logText .. string.format("[%s] %s: %s - %s\n", 
-                timeStr, log.action, log.item or "No предмета", log.reason or "No причины")
+                timeStr, log.action, log.item or "Нет предмета", log.reason or "Нет причины")
         end
     end
     
@@ -2432,12 +2432,12 @@ local function copyLogsToClipboard()
     -- Пробуем разные способы копирования
     local success = false
     
-    -- Метод 1: setclipboard (основной метод for эксплойтеров)
+    -- Метод 1: setclipboard (основной метод для эксплойтеров)
     -- luacheck: ignore setclipboard
     if type(setclipboard) == "function" then
         pcall(function()
             setclipboard(logText)
-            print("✅ Логи скопированы in буфер обмена!")
+            print("✅ Логи скопированы в буфер обмена!")
             success = true
         end)
     end
@@ -2446,17 +2446,17 @@ local function copyLogsToClipboard()
     if not success and _G.setclipboard then
         pcall(function()
             _G.setclipboard(logText)
-            print("✅ Логи скопированы in буфер обмена!")
+            print("✅ Логи скопированы в буфер обмена!")
             success = true
         end)
     end
     
-    -- Метод 3: game:GetService("TextService") (if доступен)
+    -- Метод 3: game:GetService("TextService") (если доступен)
     if not success then
         pcall(function()
             local TextService = game:GetService("TextService")
             if TextService then
-                -- Создаем временный GUI for копирования
+                -- Создаем временный GUI для копирования
                 local tempGui = Instance.new("ScreenGui")
                 tempGui.Name = "TempClipboard"
                 tempGui.Parent = PlayerGui
@@ -2467,7 +2467,7 @@ local function copyLogsToClipboard()
                 textBox.Text = logText
                 textBox.Parent = tempGui
                 
-                -- Выделяем and копируем
+                -- Выделяем и копируем
                 textBox:CaptureFocus()
                 wait(0.1)
                 textBox:SelectAll()
@@ -2485,13 +2485,13 @@ local function copyLogsToClipboard()
                 
                 wait(0.5)
                 tempGui:Destroy()
-                print("✅ Логи скопированы in буфер обмена!")
+                print("✅ Логи скопированы в буфер обмена!")
                 success = true
             end
         end)
     end
     
-    -- Метод 4: TextBox with выделением (видимый)
+    -- Метод 4: TextBox с выделением (видимый)
     if not success then
         pcall(function()
             local tempGui = Instance.new("ScreenGui")
@@ -2517,7 +2517,7 @@ local function copyLogsToClipboard()
             wait(0.1)
             
             -- Ждем 3 секунды, чтобы пользователь мог скопировать вручную
-            print("📋 Логи отображены in окне! Выделите текст and нажмите Ctrl+C for копирования")
+            print("📋 Логи отображены в окне! Выделите текст и нажмите Ctrl+C для копирования")
             wait(3)
             
             tempGui:Destroy()
@@ -2525,17 +2525,17 @@ local function copyLogsToClipboard()
         end)
     end
     
-    -- Метод 5: Просто выводим in консоль
+    -- Метод 5: Просто выводим в консоль
     if not success then
         print("=== ЛОГИ (скопируйте вручную) ===")
         print(logText)
         print("=== КОНЕЦ ЛОГОВ ===")
     end
     
-    print("Всего записей in логах: " .. #logs)
+    print("Всего записей в логах: " .. #logs)
 end
 
--- Функция for удаления дублирующихся записей in логах
+-- Функция для удаления дублирующихся записей в логах
 local function removeDuplicateLogs()
     local uniqueLogs = {}
     local seen = {}
@@ -2549,7 +2549,7 @@ local function removeDuplicateLogs()
     end
     
     logs = uniqueLogs
-    print("Очищено дублирующихся записей in логах. Осталось: " .. #logs)
+    print("Очищено дублирующихся записей в логах. Осталось: " .. #logs)
 end
 
 -- Основная функция
@@ -2557,13 +2557,13 @@ local function main()
     print("=== AUTO PET SELLER & BUYER - ONE CLICK FARM ===")
     print("Запуск всех функций автоматически...")
     
-    -- Initialization
+    -- Инициализация
     initialize()
     
-    -- Redeem codes при запуске
+    -- Ввод кодов при запуске
     redeemCodes()
     
-    -- Проверка покупки platforms при запуске
+    -- Проверка покупки платформ при запуске
     table.insert(logs, {
         action = "PLATFORM_DEBUG",
         message = "=== ПРИНУДИТЕЛЬНАЯ ПРОВЕРКА ПЛАТФОРМ ПРИ ЗАПУСКЕ ===",
@@ -2591,7 +2591,7 @@ local function main()
     if not success then
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "❌ Error in testPlatformBuying: " .. tostring(error),
+            message = "❌ Ошибка в testPlatformBuying: " .. tostring(error),
             timestamp = os.time()
         })
     else
@@ -2616,14 +2616,14 @@ local function main()
         if not success then
             table.insert(logs, {
                 action = "PLATFORM_DEBUG",
-                message = "❌ Error in autoBuyPlatforms: " .. tostring(error),
+                message = "❌ Ошибка в autoBuyPlatforms: " .. tostring(error),
                 timestamp = os.time()
             })
         end
     else
         table.insert(logs, {
             action = "PLATFORM_DEBUG",
-            message = "CONFIG.AUTO_BUY_PLATFORMS = false, авто-покупка platforms отключена in конфигурации",
+            message = "CONFIG.AUTO_BUY_PLATFORMS = false, авто-покупка платформ отключена в конфигурации",
             timestamp = os.time()
         })
     end
@@ -2639,7 +2639,7 @@ local function main()
         autoBuyPlatforms()
     end)
     
-    -- Test посадки plants при запуске
+    -- Тест посадки растений при запуске
     table.insert(logs, {
         action = "PLANT_DEBUG",
         message = "=== ТЕСТ ПОСАДКИ РАСТЕНИЙ ПРИ ЗАПУСКЕ ===",
@@ -2647,7 +2647,7 @@ local function main()
     })
     autoPlantSeeds()
     
-    -- Test улучшенной системы посадки
+    -- Тест улучшенной системы посадки
     wait(2)
     testImprovedPlantingSystem()
     
@@ -2666,7 +2666,7 @@ local function main()
         removeDuplicateLogs()
     end)
     
-    -- Настройка горячей клавиши for логов
+    -- Настройка горячей клавиши для логов
     UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if gameProcessed then return end
         
@@ -2675,27 +2675,27 @@ local function main()
         end
     end)
     
-    -- Основной цикл авто-продажи and замены брейнротов
+    -- Основной цикл авто-продажи и замены брейнротов
     spawn(function()
-        print("Запуск цикла авто-продажи and замены брейнротов...")
+        print("Запуск цикла авто-продажи и замены брейнротов...")
         while true do
             autoSellPets()
-            wait(1) -- Небольшая пауза между продажей and заменой
+            wait(1) -- Небольшая пауза между продажей и заменой
             if CONFIG.AUTO_REPLACE_BRAINROTS then
                 autoReplaceBrainrots()
             end
-            wait(1) -- Небольшая пауза перед покупкой platforms
+            wait(1) -- Небольшая пауза перед покупкой платформ
             if CONFIG.AUTO_BUY_PLATFORMS then
                 table.insert(logs, {
                     action = "PLATFORM_DEBUG",
-                    message = "Вызываем autoBuyPlatforms from основного цикла...",
+                    message = "Вызываем autoBuyPlatforms из основного цикла...",
                     timestamp = os.time()
                 })
                 autoBuyPlatforms()
             else
                 table.insert(logs, {
                     action = "PLATFORM_DEBUG",
-                    message = "Авто-покупка platforms отключена",
+                    message = "Авто-покупка платформ отключена",
                     timestamp = os.time()
                 })
             end
@@ -2730,9 +2730,9 @@ local function main()
         end
     end)
     
-    -- Основной цикл авто-посадки seeds
+    -- Основной цикл авто-посадки семян
     spawn(function()
-        print("Запуск цикла авто-посадки seeds...")
+        print("Запуск цикла авто-посадки семян...")
         -- Принудительный тест посадки при запуске
         table.insert(logs, {
             action = "PLANT_DEBUG",
@@ -2750,9 +2750,9 @@ local function main()
         end
     end)
     
-    -- Основной цикл авто-полива plants
+    -- Основной цикл авто-полива растений
     spawn(function()
-        print("Запуск цикла авто-полива plants...")
+        print("Запуск цикла авто-полива растений...")
         while true do
             if CONFIG.AUTO_WATER_PLANTS then
                 autoWaterPlants()
@@ -2761,9 +2761,9 @@ local function main()
         end
     end)
     
-    -- Основной цикл авто-покупки platforms
+    -- Основной цикл авто-покупки платформ
     spawn(function()
-        print("Запуск цикла авто-покупки platforms...")
+        print("Запуск цикла авто-покупки платформ...")
         while true do
             if CONFIG.AUTO_BUY_PLATFORMS then
                 autoBuyPlatforms()
@@ -2774,18 +2774,18 @@ local function main()
     
     
     print("=== ВСЕ ФУНКЦИИ АКТИВНЫ ===")
-    print("✅ Auto-sell pets Rare-Legendary (умная адаптивная система)")
-    print("✅ Auto-buy seeds and предметов from Gear Shop")
-    print("✅ Auto-collect coins from platforms каждые " .. CONFIG.COLLECT_INTERVAL .. " секунд")
-    print("✅ Авто-замена брейнротов on лучших (сразу после продажи)")
-    print("✅ Авто-посадка seeds каждые " .. CONFIG.PLANT_INTERVAL .. " секунд")
-    print("✅ Авто-полив plants каждые " .. CONFIG.WATER_INTERVAL .. " секунд")
-    print("✅ Авто-покупка platforms каждые " .. CONFIG.PLATFORM_BUY_INTERVAL .. " секунд")
+    print("✅ Авто-продажа петов Rare-Legendary (умная адаптивная система)")
+    print("✅ Авто-покупка семян и предметов из Gear Shop")
+    print("✅ Авто-сбор монет с платформ каждые " .. CONFIG.COLLECT_INTERVAL .. " секунд")
+    print("✅ Авто-замена брейнротов на лучших (сразу после продажи)")
+    print("✅ Авто-посадка семян каждые " .. CONFIG.PLANT_INTERVAL .. " секунд")
+    print("✅ Авто-полив растений каждые " .. CONFIG.WATER_INTERVAL .. " секунд")
+    print("✅ Авто-покупка платформ каждые " .. CONFIG.PLATFORM_BUY_INTERVAL .. " секунд")
     print("✅ Авто-открытие Lucky Eggs (Meme/Godly/Secret)")
-    print("✅ Redeem codes при запуске")
+    print("✅ Ввод кодов при запуске")
     print("✅ Копирование логов по F4")
     print("")
-    print("🚀 ФАРМ НАЧАТ! Просто играй and получай прибыль!")
+    print("🚀 ФАРМ НАЧАТ! Просто играй и получай прибыль!")
 end
 
 -- Запуск скрипта
